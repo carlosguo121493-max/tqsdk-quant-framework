@@ -1,5 +1,7 @@
 # 量化交易框架与策略
 
+本项目已发布到GitHub，仓库地址：[tqsdk-quant-framework](https://github.com/carlosguo121493-max/tqsdk-quant-framework)
+
 ## 项目简介
 
 这是一个基于天勤量化（TqSdk）的量化交易框架，提供了策略基类、均线策略、筹码分布分析等功能，可用于期货和股票的回测和实盘交易。
