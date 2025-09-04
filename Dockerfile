@@ -1,53 +1,42 @@
 # 使用Python官方镜像作为基础镜像
-FROM python:3.9-slim-buster
+# 使用更新、更可靠的Debian基础镜像
+FROM python:3.9
 
 # 设置工作目录
 WORKDIR /app
 
-# 使用非root用户运行（增加安全性）
-RUN useradd -m appuser
-USER appuser
+# 配置apt源以提高可靠性
+RUN echo 'deb http://deb.debian.org/debian bullseye main contrib non-free' > /etc/apt/sources.list && \
+    echo 'deb http://deb.debian.org/debian bullseye-updates main contrib non-free' >> /etc/apt/sources.list
 
-# 设置PATH环境变量，确保用户的pip安装可执行
-ENV PATH="/home/appuser/.local/bin:$PATH"
-
-# 安装系统依赖 - 采用更可靠的方式，添加--fix-missing参数
-USER root
-RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libc-dev \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# 切换回非root用户
-USER appuser
+# 安装系统依赖 - 采用分步骤安装，增加重试机制
+RUN apt-get clean && \
+    apt-get -y update && \
+    apt-get -y install --no-install-recommends gcc g++ libc-dev libgomp1 && \
+    apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 升级pip
-RUN pip install --upgrade pip --user
+RUN pip install --upgrade pip
 
-# 复制requirements.txt文件
-COPY --chown=appuser:appuser requirements.txt .
+# 安装Python依赖（单独安装numpy以避免编译问题）
+RUN pip install numpy==1.23.5 pandas==1.5.3 matplotlib==3.7.1
+RUN pip install tqsdk jupyter notebook
 
-# 安装Python依赖
-RUN pip install numpy pandas matplotlib tqsdk jupyter --user
+# 配置Jupyter Notebook允许远程访问
+RUN mkdir -p /root/.jupyter && \
+    echo "c.NotebookApp.ip = '*'" >> /root/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.open_browser = False" >> /root/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.port = 8888" >> /root/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.allow_root = True" >> /root/.jupyter/jupyter_notebook_config.py
 
-# 创建配置文件目录
-RUN mkdir -p /home/appuser/.jupyter
-
-# 配置Jupyter Notebook密码（密码为'quant'，可根据需要修改）
-RUN python -c "from notebook.auth import passwd; open('/home/appuser/.jupyter/jupyter_notebook_config.py', 'w').write(f'c.NotebookApp.password = u{repr(passwd("quant"))}\n')"
-
-# 配置Jupyter允许远程访问
-RUN echo "c.NotebookApp.allow_remote_access = True" >> /home/appuser/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.ip = '*'" >> /home/appuser/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.open_browser = False" >> /home/appuser/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.port = 8888" >> /home/appuser/.jupyter/jupyter_notebook_config.py
+# 设置Jupyter密码为'quant'
+RUN python -c "from notebook.auth import passwd; open('/root/.jupyter/jupyter_notebook_config.py', 'a').write(f'c.NotebookApp.password = u{repr(passwd("quant"))}\n')"
 
 # 复制项目文件
-COPY --chown=appuser:appuser . .
+COPY . .
 
-# 创建数据目录（用于存储临时数据）
+# 创建数据目录
 RUN mkdir -p /app/data
 
 # 设置环境变量
