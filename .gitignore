@@ -26,7 +26,26 @@ envs/
 .coverage.*
 nosetests.xml
 
-# IDEs and editors
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Logs
+*.log
+*.log.*
+
+# Docker
+docker-compose.override.yml
+*.dockerignore
+.docker/
+
+# Build outputs
+*.tar.gz
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE settings
 .vscode/
 .idea/
 *.swp
@@ -41,10 +60,3 @@ nosetests.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Jupyter notebooks
-.ipynb_checkpoints/
-
-# Logs
-*.log
-*.log.*
