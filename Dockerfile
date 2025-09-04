@@ -30,8 +30,13 @@ RUN mkdir -p /root/.jupyter && \
     echo "c.NotebookApp.port = 8888" >> /root/.jupyter/jupyter_notebook_config.py && \
     echo "c.NotebookApp.allow_root = True" >> /root/.jupyter/jupyter_notebook_config.py
 
-# 设置Jupyter密码为'quant'
-RUN python -c "from notebook.auth import passwd; open('/root/.jupyter/jupyter_notebook_config.py', 'a').write(f'c.NotebookApp.password = u{repr(passwd("quant"))}\n')"
+# 设置Jupyter密码为'quant' - 使用更简单的方法避免shell解析问题
+RUN echo "from notebook.auth import passwd" > /tmp/set_password.py && \
+    echo "pw = passwd('quant')" >> /tmp/set_password.py && \
+    echo "with open('/root/.jupyter/jupyter_notebook_config.py', 'a') as f:" >> /tmp/set_password.py && \
+    echo "    f.write('c.NotebookApp.password = u"' + repr(pw) + '"\n')" >> /tmp/set_password.py && \
+    python /tmp/set_password.py && \
+    rm /tmp/set_password.py
 
 # 复制项目文件
 COPY . .
