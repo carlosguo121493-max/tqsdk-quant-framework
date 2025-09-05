@@ -1,46 +1,17 @@
-version: '3.8'
+version: '3'
 
 services:
-  quant-jupyter:
-    build: .
-    container_name: quant-jupyter
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./examples:/app/examples
-      - ./framework:/app/framework
-      - ./strategies:/app/strategies
-      - ./analysis_tools:/app/analysis_tools
-      - ./data:/app/data
-      - ./web:/app/web
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-    restart: unless-stopped
-    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root
-
   # Web策略交互服务
   quant-web:
-    build: .
+    build: 
+      context: .
+      dockerfile: ./web/Dockerfile
     container_name: quant-web
     ports:
-      - "5000:5000"
+      - "5001:5001"
     volumes:
       - ./web:/app/web
       - ./framework:/app/framework
       - ./strategies:/app/strategies
       - ./data:/app/data
-    depends_on:
-      - quant-jupyter
     restart: unless-stopped
-    command: python /app/web/app.py
-
-  # 可选：添加一个用于测试的服务
-  quant-tests:
-    build: .
-    container_name: quant-tests
-    volumes:
-      - ./tests:/app/tests
-      - ./framework:/app/framework
-      - ./strategies:/app/strategies
-      - ./analysis_tools:/app/analysis_tools
-    command: python -m pytest /app/tests

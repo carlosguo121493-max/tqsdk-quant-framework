@@ -1,11 +1,17 @@
-# 使用Python官方镜像作为基础镜像
-FROM python:3.9-slim-buster
+# 使用Python Alpine版本作为基础镜像，更小更轻量
+FROM python:3.9-alpine
 
 # 设置工作目录
 WORKDIR /app
 
-# 安装系统依赖
-RUN apt-get update && apt-get install -y \n    gcc \n    g++ \n    libc-dev \n    libgomp1 \n    && rm -rf /var/lib/apt/lists/*
+# 安装Alpine系统依赖
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    musl-dev \
+    lapack-dev \
+    freetype-dev \
+    libpng-dev
 
 # 升级pip
 RUN pip install --upgrade pip
@@ -13,21 +19,8 @@ RUN pip install --upgrade pip
 # 复制requirements.txt文件
 COPY requirements.txt .
 
-# 安装Python依赖
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# 创建配置文件目录
-RUN mkdir -p /root/.jupyter
-
-# 配置Jupyter Notebook密码（密码为'quant'，可根据需要修改）
-RUN python -c "from notebook.auth import passwd; print(f'c.NotebookApp.password = u"{passwd(\"quant\")}"' >> /root/.jupyter/jupyter_notebook_config.py)"
-
-# 配置Jupyter允许远程访问
-RUN echo "c.NotebookApp.allow_remote_access = True" >> /root/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.ip = '*'" >> /root/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.open_browser = False" >> /root/.jupyter/jupyter_notebook_config.py && \
-    echo "c.NotebookApp.port = 8888" >> /root/.jupyter/jupyter_notebook_config.py
+# 安装Python依赖（使用清华PyPI镜像源）
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 
 # 复制项目文件
 COPY . .
@@ -38,8 +31,8 @@ RUN mkdir -p /app/data
 # 设置环境变量
 ENV PYTHONPATH=/app
 
-# 暴露端口
-EXPOSE 8888 5000
+# 暴露web服务端口
+EXPOSE 5001
 
-# 启动命令
-CMD ["jupyter", "notebook", "--allow-root"]
+# 启动web服务
+CMD ["python", "/app/web/app.py"]
