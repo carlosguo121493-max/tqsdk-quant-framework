@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量化交易策略交互平台</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入Font Awesome图标 -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.25rem;
+        }
+        .performance-metric {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .performance-metric:hover {
+            background-color: #e9ecef;
+            transform: scale(1.03);
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        #result-section {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .fade-in {
+            opacity: 1 !important;
+        }
+        .spinner-border {
+            width: 2rem;
+            height: 2rem;
+            border-width: 0.3em;
+        }
+        .strategy-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+        .param-group {
+            margin-bottom: 1rem;
+        }
+        .param-desc {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部 -->
+    <header class="header">
+        <div class="container">
+            <div class="row justify-content-center text-center">
+                <div class="col-md-8">
+                    <h1>量化交易策略交互平台</h1>
+                    <p>快速测试、优化和可视化您的量化交易策略</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container py-6">
+        <div class="row">
+            <!-- 左侧配置区域 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fa fa-sliders mr-2"></i> 策略配置
+                    </div>
+                    <div class="card-body">
+                        <form id="strategy-form">
+                            <!-- 策略选择 -->
+                            <div class="mb-4">
+                                <label for="strategy-select" class="form-label">选择策略</label>
+                                <select id="strategy-select" class="form-select form-select-lg">
+                                    <!-- 策略选项将通过JavaScript动态加载 -->
+                                </select>
+                            </div>
+
+                            <!-- 合约代码 -->
+                            <div class="mb-4">
+                                <label for="symbol-input" class="form-label">合约代码</label>
+                                <input type="text" id="symbol-input" class="form-control form-control-lg" placeholder="例如: IF2312" value="IF2312">
+                            </div>
+
+                            <!-- 初始资金 -->
+                            <div class="mb-4">
+                                <label for="capital-input" class="form-label">初始资金</label>
+                                <input type="number" id="capital-input" class="form-control form-control-lg" min="10000" max="10000000" step="10000" value="1000000">
+                            </div>
+
+                            <!-- 回测日期范围 -->
+                            <div class="mb-4">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="start-date" class="form-label">开始日期</label>
+                                        <input type="date" id="start-date" class="form-control form-control-lg">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="end-date" class="form-label">结束日期</label>
+                                        <input type="date" id="end-date" class="form-control form-control-lg">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 策略特定参数 -->
+                            <div id="strategy-params" class="mb-4">
+                                <!-- 策略参数将通过JavaScript动态加载 -->
+                            </div>
+
+                            <!-- 运行按钮 -->
+                            <button type="submit" id="run-button" class="btn btn-primary w-100">
+                                <i class="fa fa-play mr-2"></i> 运行回测
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 策略信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-info-circle mr-2"></i> 策略说明
+                    </div>
+                    <div class="card-body">
+                        <div id="strategy-description" class="strategy-info">
+                            请选择一个策略查看详细说明...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧结果展示区域 -->
+            <div class="col-md-8">
+                <!-- 进度条 -->
+                <div class="card mb-4" id="progress-section" style="display: none;">
+                    <div class="card-header">
+                        <i class="fa fa-cog fa-spin mr-2"></i> 回测进度
+                    </div>
+                    <div class="card-body">
+                        <div class="progress" style="height: 25px;">
+                            <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <div id="progress-text">准备开始回测...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 回测结果 -->
+                <div class="card mb-4" id="result-section">
+                    <div class="card-header">
+                        <i class="fa fa-line-chart mr-2"></i> 回测结果
+                    </div>
+                    <div class="card-body">
+                        <!-- 策略和合约信息 -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5><span id="result-strategy-name"></span></h5>
+                            </div>
+                            <div class="col-md-6 text-md-right">
+                                <h5>合约: <span id="result-symbol"></span></h5>
+                            </div>
+                        </div>
+
+                        <!-- 性能指标 -->
+                        <div class="row mb-6">
+                            <div class="col-md-3">
+                                <div class="performance-metric">
+                                    <div class="metric-value" id="total-return"></div>
+                                    <div class="metric-label">总收益率</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="performance-metric">
+                                    <div class="metric-value" id="sharpe-ratio"></div>
+                                    <div class="metric-label">夏普率</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="performance-metric">
+                                    <div class="metric-value" id="max-drawdown"></div>
+                                    <div class="metric-label">最大回撤</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="performance-metric">
+                                    <div class="metric-value" id="calmar-ratio"></div>
+                                    <div class="metric-label">卡玛比率</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 资金曲线图 -->
+                        <div class="mb-6">
+                            <h5 class="mb-3">资金曲线图</h5>
+                            <div class="chart-container">
+                                <canvas id="equity-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 回撤曲线图 -->
+                        <div>
+                            <h5 class="mb-3">回撤曲线图</h5>
+                            <div class="chart-container">
+                                <canvas id="drawdown-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row justify-content-center text-center">
+                <div class="col-md-6">
+                    <p>&copy; 2023 量化交易策略交互平台</p>
+                    <p class="text-muted" style="font-size: 0.9rem;">免责声明：本平台仅用于策略测试，不构成投资建议</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 引入Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 主脚本 -->
+    <script>
+        // 全局变量
+        let equityChart = null;
+        let drawdownChart = null;
+        
+        // 初始化日期选择器
+        function initDatePickers() {
+            const today = new Date();
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
+            
+            // 格式化日期为YYYY-MM-DD
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+            
+            document.getElementById('start-date').value = formatDate(oneYearAgo);
+            document.getElementById('end-date').value = formatDate(today);
+        }
+        
+        // 加载可用策略
+        function loadStrategies() {
+            fetch('/api/strategies')
+                .then(response => response.json())
+                .then(strategies => {
+                    const strategySelect = document.getElementById('strategy-select');
+                    strategySelect.innerHTML = '';
+                    
+                    strategies.forEach(strategy => {
+                        const option = document.createElement('option');
+                        option.value = strategy.id;
+                        option.textContent = strategy.name;
+                        strategySelect.appendChild(option);
+                    });
+                    
+                    // 加载第一个策略的参数
+                    if (strategies.length > 0) {
+                        loadStrategyParams(strategies[0].id);
+                        updateStrategyDescription(strategies[0].description);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载策略失败:', error);
+                    alert('加载策略失败，请刷新页面重试');
+                });
+        }
+        
+        // 加载策略参数
+        function loadStrategyParams(strategyId) {
+            fetch(`/api/strategy_params/${strategyId}`)
+                .then(response => response.json())
+                .then(params => {
+                    const paramsContainer = document.getElementById('strategy-params');
+                    paramsContainer.innerHTML = '';
+                    
+                    params.forEach(param => {
+                        const paramGroup = document.createElement('div');
+                        paramGroup.className = 'param-group';
+                        
+                        let inputHtml = '';
+                        
+                        if (param.type === 'number') {
+                            const step = param.step || 1;
+                            inputHtml = `
+                                <label for="param-${param.name}" class="form-label">${param.label}</label>
+                                <input 
+                                    type="number" 
+                                    id="param-${param.name}" 
+                                    name="${param.name}"
+                                    class="form-control"
+                                    value="${param.default}"
+                                    min="${param.min}"
+                                    max="${param.max}"
+                                    step="${step}"
+                                >
+                                <div class="param-desc">范围: ${param.min} - ${param.max}</div>
+                            `;
+                        } else if (param.type === 'select') {
+                            // 可以扩展支持下拉选择框类型的参数
+                        }
+                        
+                        paramGroup.innerHTML = inputHtml;
+                        paramsContainer.appendChild(paramGroup);
+                    });
+                })
+                .catch(error => {
+                    console.error('加载策略参数失败:', error);
+                });
+        }
+        
+        // 更新策略说明
+        function updateStrategyDescription(description) {
+            const descriptionContainer = document.getElementById('strategy-description');
+            descriptionContainer.textContent = description;
+        }
+        
+        // 初始化图表
+        function initCharts() {
+            // 资金曲线图
+            const equityCtx = document.getElementById('equity-chart').getContext('2d');
+            equityChart = new Chart(equityCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '资金曲线',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `资金: ¥${context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + (value / 10000).toFixed(1) + 'w';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+            
+            // 回撤曲线图
+            const drawdownCtx = document.getElementById('drawdown-chart').getContext('2d');
+            drawdownChart = new Chart(drawdownCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '回撤',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `回撤: ${context.parsed.y.toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(0) + '%';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 更新图表数据
+        function updateCharts(result) {
+            // 更新资金曲线图
+            equityChart.data.labels = result.equity_data.dates;
+            equityChart.data.datasets[0].data = result.equity_data.values;
+            equityChart.update();
+            
+            // 计算回撤数据
+            const equityValues = result.equity_data.values;
+            const runningMax = [];
+            const drawdownValues = [];
+            
+            let maxSoFar = equityValues[0];
+            
+            equityValues.forEach(value => {
+                maxSoFar = Math.max(maxSoFar, value);
+                runningMax.push(maxSoFar);
+                drawdownValues.push(((value - maxSoFar) / maxSoFar) * 100);
+            });
+            
+            // 更新回撤曲线图
+            drawdownChart.data.labels = result.equity_data.dates;
+            drawdownChart.data.datasets[0].data = drawdownValues;
+            drawdownChart.update();
+        }
+        
+        // 显示回测结果
+        function showBacktestResult(result) {
+            // 更新性能指标
+            document.getElementById('result-strategy-name').textContent = result.strategy_name;
+            document.getElementById('result-symbol').textContent = result.symbol;
+            document.getElementById('total-return').textContent = `${result.performance.total_return}%`;
+            document.getElementById('sharpe-ratio').textContent = result.performance.sharpe_ratio.toFixed(2);
+            document.getElementById('max-drawdown').textContent = `${result.performance.max_drawdown}%`;
+            document.getElementById('calmar-ratio').textContent = result.performance.calmar_ratio.toFixed(2);
+            
+            // 更新图表
+            updateCharts(result);
+            
+            // 显示结果区域
+            const resultSection = document.getElementById('result-section');
+            resultSection.classList.add('fade-in');
+            
+            // 滚动到结果区域
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 策略选择变化事件
+            const strategySelect = document.getElementById('strategy-select');
+            strategySelect.addEventListener('change', function() {
+                const strategyId = this.value;
+                loadStrategyParams(strategyId);
+                
+                // 获取策略说明
+                fetch('/api/strategies')
+                    .then(response => response.json())
+                    .then(strategies => {
+                        const selectedStrategy = strategies.find(s => s.id === strategyId);
+                        if (selectedStrategy) {
+                            updateStrategyDescription(selectedStrategy.description);
+                        }
+                    });
+            });
+            
+            // 表单提交事件
+            const strategyForm = document.getElementById('strategy-form');
+            strategyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 获取表单数据
+                const strategyId = document.getElementById('strategy-select').value;
+                const symbol = document.getElementById('symbol-input').value;
+                const initialCapital = document.getElementById('capital-input').value;
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                // 验证表单
+                if (!symbol) {
+                    alert('请输入合约代码');
+                    return;
+                }
+                
+                if (!startDate || !endDate) {
+                    alert('请选择回测日期范围');
+                    return;
+                }
+                
+                // 获取策略参数
+                const params = {};
+                const paramInputs = document.querySelectorAll('#strategy-params input, #strategy-params select');
+                paramInputs.forEach(input => {
+                    const paramName = input.name;
+                    if (input.type === 'number') {
+                        params[paramName] = parseFloat(input.value);
+                    } else {
+                        params[paramName] = input.value;
+                    }
+                });
+                
+                // 准备请求数据
+                const requestData = {
+                    strategy_id: strategyId,
+                    symbol: symbol,
+                    initial_capital: parseInt(initialCapital),
+                    start_date: startDate,
+                    end_date: endDate,
+                    params: params
+                };
+                
+                // 显示进度条
+                const progressSection = document.getElementById('progress-section');
+                progressSection.style.display = 'block';
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                progressText.textContent = '准备开始回测...';
+                
+                // 隐藏结果区域
+                const resultSection = document.getElementById('result-section');
+                resultSection.classList.remove('fade-in');
+                
+                // 发送请求
+                fetch('/api/run_backtest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // 隐藏进度条
+                        progressSection.style.display = 'none';
+                        
+                        // 显示结果
+                        showBacktestResult(result);
+                    } else {
+                        // 显示错误信息
+                        progressText.textContent = `回测失败: ${result.error}`;
+                        alert(`回测失败: ${result.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('回测请求失败:', error);
+                    progressText.textContent = '回测请求失败，请检查网络连接';
+                    alert('回测请求失败，请检查网络连接');
+                });
+                
+                // 模拟进度更新
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if (progress > 100) progress = 100;
+                    
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.textContent = `${Math.round(progress)}%`;
+                    
+                    // 更新进度文本
+                    let statusText = '正在准备数据...';
+                    if (progress > 30) statusText = '正在运行策略...';
+                    if (progress > 70) statusText = '正在计算性能指标...';
+                    if (progress > 90) statusText = '正在生成报告...';
+                    
+                    progressText.textContent = statusText;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                    }
+                }, 300);
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initDatePickers();
+            loadStrategies();
+            initCharts();
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>

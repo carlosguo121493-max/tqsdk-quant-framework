@@ -1,0 +1,41 @@
+# 忽略Python编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 忽略虚拟环境
+venv/
+.venv/
+env/
+ENV/
+
+# 忽略日志文件
+*.log
+
+# 忽略临时文件
+*.tmp
+*.temp
+
+# 忽略IDE配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 忽略操作系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略测试和覆盖率报告
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 忽略生产环境文件
+instance/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
