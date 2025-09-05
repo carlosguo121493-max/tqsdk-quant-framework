@@ -14,7 +14,8 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 
 # 安装Python依赖
-RUN pip install numpy pandas matplotlib tqsdk jupyter
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # 创建配置文件目录
 RUN mkdir -p /root/.jupyter
@@ -38,7 +39,7 @@ RUN mkdir -p /app/data
 ENV PYTHONPATH=/app
 
 # 暴露端口
-EXPOSE 8888
+EXPOSE 8888 5000
 
 # 启动命令
 CMD ["jupyter", "notebook", "--allow-root"]
