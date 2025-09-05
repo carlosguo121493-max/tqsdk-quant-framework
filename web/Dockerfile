@@ -12,7 +12,8 @@ RUN apk add --no-cache \
     lapack-dev \
     freetype-dev \
     libpng-dev \
-    linux-headers
+    linux-headers \
+    postgresql-dev
 
 # 复制项目文件和requirements.txt
 COPY ../requirements.txt .
@@ -34,7 +35,8 @@ RUN apk add --no-cache \
     libstdc++ \
     libgomp \
     freetype \
-    libpng
+    libpng \
+    postgresql-libs
 
 # 复制项目文件
 COPY . .
@@ -47,8 +49,11 @@ RUN mkdir -p /app/data
 # 设置环境变量
 ENV PYTHONPATH=/app
 
+# 赋予启动脚本执行权限
+RUN chmod +x /app/web/start.sh
+
 # 暴露端口
 EXPOSE 5001
 
 # 启动命令
-CMD ["python", "/app/web/app.py"]
+CMD ["/app/web/start.sh"]

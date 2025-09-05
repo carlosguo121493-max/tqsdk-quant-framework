@@ -1,87 +1,120 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
-玻璃期货回测策略 - 均线交叉策略
-'''
+"""
+玻璃位策略模块
+基于价格支撑阻力位的交易策略
+"""
 
-from datetime import date
-from tqsdk import TqApi, TqAuth, TqBacktest, TqSim, TargetPosTask
-from tqsdk.ta import MA
+from tqsdk import TargetPosTask
+from framework.quant_framework import StrategyBase
 
-# 策略参数
-SYMBOL = "SHFE.FG2401"  # 玻璃期货，上海期货交易所，使用具体合约代码
-SHORT_PERIOD = 5  # 短周期均线
-LONG_PERIOD = 20  # 长周期均线
-INITIAL_CAPITAL = 100000  # 初始资金
-
-# 设置回测参数
-BACKTEST_START_DATE = date(2022, 1, 1)  # 回测开始日期
-BACKTEST_END_DATE = date(2023, 12, 31)  # 回测结束日期
-
-def run_strategy():
-    '''
-    运行策略
-    '''
-    print(f"开始回测 {SYMBOL} 均线交叉策略...")
-    print(f"参数: 短周期={SHORT_PERIOD}, 长周期={LONG_PERIOD}")
-    print(f"回测区间: {BACKTEST_START_DATE} 至 {BACKTEST_END_DATE}")
-    
-    # 创建API实例，设置回测模式
-    # 注意：使用天勤量化SDK需要注册天勤账户，请在以下网址注册：https://account.shinnytech.com/
-    # 请填写您的天勤账户和密码
-    
-    api = TqApi(TqSim(init_balance=INITIAL_CAPITAL), 
-               auth=TqAuth("您的天勤账户", "您的天勤密码"), 
-               backtest=TqBacktest(start_dt=BACKTEST_START_DATE, end_dt=BACKTEST_END_DATE))
-    
-    # 获取玻璃期货的K线数据
-    klines = api.get_kline_serial(SYMBOL, 60*60*24)  # 日线
-    
-    # 计算均线
-    short_ma = MA(klines, SHORT_PERIOD)
-    long_ma = MA(klines, LONG_PERIOD)
-    
-    # 创建 TargetPosTask 用于自动调整持仓
-    target_pos = TargetPosTask(api, SYMBOL)
-    
-    # 持仓状态，初始为空仓
-    position = 0
-    
-    # 策略循环
-    while True:
-        # 等待K线更新
-        api.wait_update()
+class GlassPositionStrategy(StrategyBase):
+    """
+    玻璃位策略
+    基于价格支撑阻力位的交易策略
+    通过计算一定时间窗口内的价格波动范围来确定支撑和阻力位
+    """
+    def __init__(self, window_size=20, threshold=0.5, kline_period=60*60*24):
+        """
+        初始化玻璃位策略
         
-        # 如果K线最后一根发生变化
-        if api.is_changing(klines.iloc[-1], "datetime"):
-            # 计算信号
-            short_ma_value = short_ma.iloc[-1]
-            long_ma_value = long_ma.iloc[-1]
-            short_ma_prev = short_ma.iloc[-2]
-            long_ma_prev = long_ma.iloc[-2]
+        Args:
+            window_size: 计算支撑阻力位的窗口大小，默认为20
+            threshold: 突破阈值百分比，默认为0.5%，当价格突破支撑或阻力位一定百分比时触发交易
+            kline_period: K线周期，单位为秒，默认为日线(60*60*24)
+        """
+        super().__init__()
+        self.window_size = window_size
+        self.threshold = threshold  # 百分比，如0.5表示0.5%
+        self.kline_period = kline_period
+        self.klines = None
+        self.target_pos = None
+        self.position = 0
+        self.resistance_level = None  # 阻力位
+        self.support_level = None  # 支撑位
+        
+    def initialize(self, api, symbol):
+        """
+        初始化策略
+        
+        Args:
+            api: TqApi实例
+            symbol: 交易品种代码
+        """
+        super().initialize(api, symbol)
+        
+        # 获取K线数据
+        self.klines = api.get_kline_serial(symbol, self.kline_period)
+        
+        # 创建TargetPosTask用于自动调整持仓
+        self.target_pos = TargetPosTask(api, symbol)
+        
+        # 打印策略参数
+        print(f"玻璃位策略参数: 窗口大小={self.window_size}, 突破阈值={self.threshold}%")
+        
+    def run(self):
+        """
+        运行策略
+        """
+        while True:
+            # 等待K线更新
+            self.api.wait_update()
             
-            # 金叉信号: 短周期均线从下方穿过长周期均线
-            if short_ma_prev <= long_ma_prev and short_ma_value > long_ma_value:
-                # 买入信号
-                if position <= 0:
-                    print(f"金叉信号: 买入 {SYMBOL}, 价格: {klines.iloc[-1].close}")
-                    target_pos.set_target_volume(1)  # 设置目标持仓为1手
-                    position = 1
-            
-            # 死叉信号: 短周期均线从上方穿过长周期均线
-            elif short_ma_prev >= long_ma_prev and short_ma_value < long_ma_value:
-                # 卖出信号
-                if position >= 0:
-                    print(f"死叉信号: 卖出 {SYMBOL}, 价格: {klines.iloc[-1].close}")
-                    target_pos.set_target_volume(-1)  # 设置目标持仓为-1手
-                    position = -1
+            # 如果K线最后一根发生变化
+            if self.api.is_changing(self.klines.iloc[-1], "datetime"):
+                # 确保有足够的数据计算支撑阻力位
+                if len(self.klines) >= self.window_size:
+                    # 计算支撑阻力位
+                    self._calculate_support_resistance()
+                    # 生成交易信号
+                    self._generate_signals()
+                
+                # 更新性能指标
+                self.update_performance()
     
-    # 关闭API实例
-    api.close()
-
-if __name__ == "__main__":
-    try:
-        run_strategy()
-    except Exception as e:
-        print(f"策略运行出错: {e}")
+    def _calculate_support_resistance(self):
+        """
+        计算支撑位和阻力位
+        使用最近window_size根K线的最高价和最低价
+        """
+        # 检查数据有效性
+        if len(self.klines) < self.window_size:
+            return
+        
+        # 取最近window_size根K线
+        recent_klines = self.klines.iloc[-self.window_size:]
+        
+        # 计算阻力位（最高价）
+        self.resistance_level = recent_klines.high.max()
+        
+        # 计算支撑位（最低价）
+        self.support_level = recent_klines.low.min()
+    
+    def _generate_signals(self):
+        """
+        生成交易信号
+        当价格突破阻力位一定百分比时买入
+        当价格跌破支撑位一定百分比时卖出
+        """
+        # 获取当前价格
+        current_price = self.klines.iloc[-1].close
+        
+        # 计算阈值的价格值
+        price_threshold = current_price * (self.threshold / 100)
+        
+        # 买入信号：价格突破阻力位加上阈值
+        if current_price > self.resistance_level + price_threshold:
+            if self.position <= 0:
+                print(f"突破阻力位信号: 买入 {self.symbol}, 价格: {current_price:.2f}, 阻力位: {self.resistance_level:.2f}")
+                self.target_pos.set_target_volume(1)  # 设置目标持仓为1手
+                self.position = 1
+                self.trade_count += 1
+        
+        # 卖出信号：价格跌破支撑位减去阈值
+        elif current_price < self.support_level - price_threshold:
+            if self.position >= 0:
+                print(f"跌破支撑位信号: 卖出 {self.symbol}, 价格: {current_price:.2f}, 支撑位: {self.support_level:.2f}")
+                self.target_pos.set_target_volume(-1)  # 设置目标持仓为-1手
+                self.position = -1
+                self.trade_count += 1

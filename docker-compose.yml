@@ -14,4 +14,25 @@ services:
       - ./framework:/app/framework
       - ./strategies:/app/strategies
       - ./data:/app/data
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://quant_user:quant_password@db:5432/quant_db
     restart: unless-stopped
+  
+  # PostgreSQL数据库服务
+  db:
+    image: postgres:14-alpine
+    container_name: quant-db
+    environment:
+      - POSTGRES_DB=quant_db
+      - POSTGRES_USER=quant_user
+      - POSTGRES_PASSWORD=quant_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
