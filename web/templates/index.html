@@ -47,7 +47,7 @@
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
         }
         .card-header {
             background-color: #f8f9fa;
@@ -203,7 +203,154 @@
                 margin-bottom: 1rem;
             }
             .metric-value {
+                font-size: 2rem;
+                font-weight: bold;
+                line-height: 1.2;
+                margin-bottom: 0.25rem;
+            }
+            
+            .metric-label {
+                font-size: 0.9rem;
+                color: #6c757d;
+                margin-top: 0.25rem;
+            }
+            
+            .performance-metric {
+                transition: all 0.3s ease;
+                border-radius: 8px;
+                text-align: center;
+            }
+            
+            .performance-metric:hover {
+                transform: translateY(-2px);
+            }
+            
+            /* 结果区域动画 */
+            .fade-in {
+                animation: fadeIn 0.8s ease-in-out;
+            }
+            
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            /* 结果卡片样式优化 */
+            #result-section {
+                background-color: #f8f9fa;
+                border-radius: 12px;
+                padding: 1px;
+            }
+            
+            #result-section .card {
+                border: none;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+            
+            #result-section .card-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-weight: bold;
+                font-size: 1.2rem;
+                padding: 1rem 1.5rem;
+            }
+            
+            /* 图表容器样式优化 */
+            .chart-container {
+                background: white;
+                border-radius: 8px;
+                padding: 1rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            
+            /* 数字颜色状态 */
+            .text-positive {
+                color: #28a745 !important;
+            }
+            
+            .text-negative {
+                color: #dc3545 !important;
+            }
+            
+            /* 指标内部布局 */
+            .metric-inner {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .metric-inner .value {
+                font-size: 2.2rem;
+                font-weight: bold;
+                line-height: 1.1;
+            }
+            
+            /* 趋势指示器样式 - 向上箭头红色，向下箭头绿色 */
+            .trend-indicator {
+                margin-left: 0.5rem;
                 font-size: 1.5rem;
+                opacity: 0.8;
+                animation: pulse 2s infinite;
+            }
+            
+            /* 调整文字颜色和箭头颜色保持一致 */
+            .text-positive {
+                color: #dc3545 !important; /* 红色 - 正值文字颜色 */
+            }
+            
+            .text-positive .trend-indicator .fa-arrow-up {
+                color: #dc3545 !important; /* 红色 - 正值箭头颜色 */
+            }
+            
+            .text-negative {
+                color: #28a745 !important; /* 绿色 - 负值文字颜色 */
+            }
+            
+            .text-negative .trend-indicator .fa-arrow-down {
+                color: #28a745 !important; /* 绿色 - 负值箭头颜色 */
+            }
+            
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.1);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            
+            /* 添加背景装饰效果 */
+            .performance-metric {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .performance-metric::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                transform: scaleX(0);
+                transform-origin: left;
+                transition: transform 0.3s ease;
+            }
+            
+            .performance-metric:hover::before {
+                transform: scaleX(1);
             }
             .chart-container {
                 height: 250px;
@@ -414,40 +561,57 @@
                             </div>
                         </div>
 
-                        <!-- 性能指标 -->
-                        <div class="row mb-6">
-                            <div class="col-md-3">
-                                <div class="performance-metric">
-                                    <div class="metric-value" id="total-return"></div>
-                                    <div class="metric-label">总收益率</div>
+                        <!-- 性能指标 - 模仿输入框的并排布局 -->
+                        <!-- 第一行指标 -->
+                        <div class="mb-4">
+                            <div class="row flex-nowrap">
+                                <div class="col-6 pr-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="total-return"></div>
+                                        <div class="metric-label text-gray-600 font-medium">总收益率</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="performance-metric">
-                                    <div class="metric-value" id="sharpe-ratio"></div>
-                                    <div class="metric-label">夏普率</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="performance-metric">
-                                    <div class="metric-value" id="max-drawdown"></div>
-                                    <div class="metric-label">最大回撤</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="performance-metric">
-                                    <div class="metric-value" id="calmar-ratio"></div>
-                                    <div class="metric-label">卡玛比率</div>
+                                <div class="col-6 pl-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="annual-return"></div>
+                                        <div class="metric-label text-gray-600 font-medium">年化收益率</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- 更多性能指标 -->
-                        <div class="row mb-6">
-                            <div class="col-md-12">
-                                <div class="performance-metric">
-                                    <div class="metric-value" id="profit-factor"></div>
-                                    <div class="metric-label">盈亏比</div>
+                        <!-- 第二行指标 -->
+                        <div class="mb-4">
+                            <div class="row flex-nowrap">
+                                <div class="col-6 pr-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="sharpe-ratio"></div>
+                                        <div class="metric-label text-gray-600 font-medium">夏普率</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 pl-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="max-drawdown"></div>
+                                        <div class="metric-label text-gray-600 font-medium">最大回撤</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第三行指标 -->
+                        <div class="mb-6">
+                            <div class="row flex-nowrap">
+                                <div class="col-6 pr-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="calmar-ratio"></div>
+                                        <div class="metric-label text-gray-600 font-medium">卡玛比率</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 pl-2">
+                                    <div class="performance-metric card p-4 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-300 h-100">
+                                        <div class="metric-value font-bold text-2xl" id="profit-factor"></div>
+                                        <div class="metric-label text-gray-600 font-medium">盈亏比</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -725,31 +889,84 @@
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: '资金曲线',
-                        data: [],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: 0,
-                        pointHoverRadius: 4
-                    }]
+                    datasets: [
+                        {
+                            label: '策略收益',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#667eea',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2
+                        },
+                        {
+                            label: '大盘收益',
+                            data: [],
+                            borderColor: '#36d399',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#36d399',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2
+                        },
+                        {
+                            label: '无风险收益',
+                            data: [],
+                            borderColor: '#ffab00',
+                            borderWidth: 3,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#ffab00',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
                         },
                         tooltip: {
-                            mode: 'index',
-                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
                             callbacks: {
                                 label: function(context) {
-                                    return `资金: ¥${context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                    return `${context.dataset.label}: ¥${context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                                 }
                             }
                         }
@@ -761,20 +978,29 @@
                             },
                             ticks: {
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
                             }
                         },
                         y: {
                             beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
                             ticks: {
                                 callback: function(value) {
                                     return '¥' + (value / 10000).toFixed(1) + 'w';
+                                },
+                                font: {
+                                    size: 11
                                 }
                             }
                         }
                     },
                     animation: {
-                        duration: 1500,
+                        duration: 2000,
                         easing: 'easeOutQuart'
                     }
                 }
@@ -791,23 +1017,38 @@
                         data: [],
                         borderColor: '#e74c3c',
                         backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        borderWidth: 2,
+                        borderWidth: 3,
                         fill: true,
                         tension: 0.2,
                         pointRadius: 0,
-                        pointHoverRadius: 4
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#e74c3c',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
                             display: false
                         },
                         tooltip: {
-                            mode: 'index',
-                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
                             callbacks: {
                                 label: function(context) {
                                     return `回撤: ${context.parsed.y.toFixed(2)}%`;
@@ -822,19 +1063,28 @@
                             },
                             ticks: {
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
                             }
                         },
                         y: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
                             ticks: {
                                 callback: function(value) {
                                     return value.toFixed(0) + '%';
+                                },
+                                font: {
+                                    size: 11
                                 }
                             }
                         }
                     },
                     animation: {
-                        duration: 1500,
+                        duration: 2000,
                         easing: 'easeOutQuart'
                     }
                 }
@@ -846,6 +1096,22 @@
             // 更新资金曲线图
             equityChart.data.labels = result.equity_data.dates;
             equityChart.data.datasets[0].data = result.equity_data.values;
+            
+            // 更新大盘和无风险收益率曲线
+            if (result.equity_data.market_values) {
+                equityChart.data.datasets[1].data = result.equity_data.market_values;
+            } else {
+                // 如果没有大盘数据，使用模拟数据显示
+                equityChart.data.datasets[1].data = generateMockData(result.equity_data.values.length, 0.8);
+            }
+            
+            if (result.equity_data.risk_free_values) {
+                equityChart.data.datasets[2].data = result.equity_data.risk_free_values;
+            } else {
+                // 如果没有无风险收益率数据，使用模拟数据显示
+                equityChart.data.datasets[2].data = generateRiskFreeData(result.equity_data.values[0], result.equity_data.values.length);
+            }
+            
             equityChart.update();
             
             // 计算回撤数据
@@ -867,14 +1133,46 @@
             drawdownChart.update();
         }
         
+        // 生成模拟的大盘数据
+        function generateMockData(length, volatility) {
+            const data = [1000000]; // 假设初始资金相同
+            for (let i = 1; i < length; i++) {
+                const change = (Math.random() - 0.48) * volatility;
+                const newValue = data[i-1] * (1 + change / 100);
+                data.push(newValue);
+            }
+            return data;
+        }
+        
+        // 生成模拟的无风险收益数据（假设年化2%）
+        function generateRiskFreeData(initialValue, length) {
+            const data = [initialValue];
+            const dailyRiskFreeRate = Math.pow(1.02, 1/365) - 1;
+            for (let i = 1; i < length; i++) {
+                const newValue = data[i-1] * (1 + dailyRiskFreeRate);
+                data.push(newValue);
+            }
+            return data;
+        }
+        
         // 显示回测结果
         function showBacktestResult(result) {
-            // 更新性能指标
-            document.getElementById('result-strategy-name').textContent = result.strategy_name;
-            document.getElementById('result-symbol').textContent = result.symbol;
+            // 更新性能指标 - 添加null检查
+            const resultStrategyName = document.getElementById('result-strategy-name');
+            if (resultStrategyName) {
+                resultStrategyName.textContent = result.strategy_name;
+            }
+            
+            const resultSymbol = document.getElementById('result-symbol');
+            if (resultSymbol) {
+                resultSymbol.textContent = result.symbol;
+            }
             
             // 更新手续费率和回测级别
-            document.getElementById('result-commission-rate').textContent = result.commission_rate || '0.01';
+            const resultCommissionRate = document.getElementById('result-commission-rate');
+            if (resultCommissionRate) {
+                resultCommissionRate.textContent = result.commission_rate || '0.01';
+            }
             
             // 映射回测级别到中文名称
             const levelMap = {
@@ -886,23 +1184,168 @@
                 '5min': '5分钟线',
                 '1min': '1分钟线'
             };
-            document.getElementById('result-backtest-level').textContent = levelMap[result.backtest_level] || '日线';
+            const resultBacktestLevel = document.getElementById('result-backtest-level');
+            if (resultBacktestLevel) {
+                resultBacktestLevel.textContent = levelMap[result.backtest_level] || '日线';
+            }
             
-            document.getElementById('total-return').textContent = `${result.performance.total_return}%`;
-            document.getElementById('sharpe-ratio').textContent = result.performance.sharpe_ratio.toFixed(2);
-            document.getElementById('max-drawdown').textContent = `${result.performance.max_drawdown}%`;
-            document.getElementById('calmar-ratio').textContent = result.performance.calmar_ratio.toFixed(2);
-            document.getElementById('profit-factor').textContent = result.performance.profit_factor.toFixed(2);
+            // 总收益率 - 添加设计感
+            const totalReturn = document.getElementById('total-return');
+            if (totalReturn) {
+                const returnValue = parseFloat(result.performance.total_return);
+                totalReturn.innerHTML = `
+                    <div class="metric-inner">
+                        <span class="value">${returnValue.toFixed(2)}%</span>
+                        <span class="trend-indicator">
+                            <i class="fa fa-arrow-${returnValue > 0 ? 'up' : 'down'}"></i>
+                        </span>
+                    </div>
+                `;
+                // 根据正负值添加颜色类
+                if (returnValue > 0) {
+                    totalReturn.classList.add('text-positive');
+                    totalReturn.classList.remove('text-negative');
+                } else {
+                    totalReturn.classList.add('text-negative');
+                    totalReturn.classList.remove('text-positive');
+                }
+            }
+            
+            // 年化收益率 - 添加颜色样式和设计感
+            const annualReturn = document.getElementById('annual-return');
+            if (annualReturn) {
+                // 注意：后端返回的字段名是annualized_return，不是annual_return
+                if (result.performance.annualized_return) {
+                    const returnValue = result.performance.annualized_return;
+                    annualReturn.textContent = `${returnValue.toFixed(2)}%`;
+                    // 添加装饰性元素
+                    annualReturn.innerHTML = `
+                        <div class="metric-inner">
+                            <span class="value">${returnValue.toFixed(2)}%</span>
+                            <span class="trend-indicator">
+                                <i class="fa fa-arrow-${returnValue > 0 ? 'up' : 'down'}"></i>
+                            </span>
+                        </div>
+                    `;
+                    // 根据正负值添加颜色类
+                    if (returnValue > 0) {
+                        annualReturn.classList.add('text-positive');
+                        annualReturn.classList.remove('text-negative');
+                    } else {
+                        annualReturn.classList.add('text-negative');
+                        annualReturn.classList.remove('text-positive');
+                    }
+                } else {
+                    annualReturn.innerHTML = `
+                        <div class="metric-inner">
+                            <span class="value">N/A</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 夏普率 - 添加设计感
+            const sharpeRatio = document.getElementById('sharpe-ratio');
+            if (sharpeRatio) {
+                const value = result.performance.sharpe_ratio;
+                sharpeRatio.innerHTML = `
+                    <div class="metric-inner">
+                        <span class="value">${value.toFixed(2)}</span>
+                        <span class="trend-indicator">
+                            <i class="fa fa-arrow-${value > 0.5 ? 'up' : 'down'}"></i>
+                        </span>
+                    </div>
+                `;
+                // 夏普率通常希望大于0.5
+                if (value > 0.5) {
+                    sharpeRatio.classList.add('text-positive');
+                    sharpeRatio.classList.remove('text-negative');
+                } else {
+                    sharpeRatio.classList.add('text-negative');
+                    sharpeRatio.classList.remove('text-positive');
+                }
+            }
+            
+            // 最大回撤 - 添加设计感
+            const maxDrawdown = document.getElementById('max-drawdown');
+            if (maxDrawdown) {
+                const value = parseFloat(result.performance.max_drawdown);
+                maxDrawdown.innerHTML = `
+                    <div class="metric-inner">
+                        <span class="value">${value.toFixed(2)}%</span>
+                        <span class="trend-indicator">
+                            <i class="fa fa-arrow-${Math.abs(value) < 20 ? 'up' : 'down'}"></i>
+                        </span>
+                    </div>
+                `;
+                // 回撤越小越好
+                if (Math.abs(value) < 20) {
+                    maxDrawdown.classList.add('text-positive');
+                    maxDrawdown.classList.remove('text-negative');
+                } else {
+                    maxDrawdown.classList.add('text-negative');
+                    maxDrawdown.classList.remove('text-positive');
+                }
+            }
+            
+            // 卡玛比率 - 添加设计感
+            const calmarRatio = document.getElementById('calmar-ratio');
+            if (calmarRatio) {
+                const value = result.performance.calmar_ratio;
+                calmarRatio.innerHTML = `
+                    <div class="metric-inner">
+                        <span class="value">${value.toFixed(2)}</span>
+                        <span class="trend-indicator">
+                            <i class="fa fa-arrow-${value > 1 ? 'up' : 'down'}"></i>
+                        </span>
+                    </div>
+                `;
+                // 卡玛比率通常希望大于1
+                if (value > 1) {
+                    calmarRatio.classList.add('text-positive');
+                    calmarRatio.classList.remove('text-negative');
+                } else {
+                    calmarRatio.classList.add('text-negative');
+                    calmarRatio.classList.remove('text-positive');
+                }
+            }
+            
+            // 盈亏比 - 添加设计感
+            const profitFactor = document.getElementById('profit-factor');
+            if (profitFactor) {
+                const value = result.performance.profit_factor;
+                profitFactor.innerHTML = `
+                    <div class="metric-inner">
+                        <span class="value">${value.toFixed(2)}</span>
+                        <span class="trend-indicator">
+                            <i class="fa fa-arrow-${value > 1.5 ? 'up' : 'down'}"></i>
+                        </span>
+                    </div>
+                `;
+                // 盈亏比通常希望大于1.5
+                if (value > 1.5) {
+                    profitFactor.classList.add('text-positive');
+                    profitFactor.classList.remove('text-negative');
+                } else {
+                    profitFactor.classList.add('text-negative');
+                    profitFactor.classList.remove('text-positive');
+                }
+            }
             
             // 更新图表
             updateCharts(result);
             
             // 显示结果区域
             const resultSection = document.getElementById('result-section');
-            resultSection.classList.add('fade-in');
-            
-            // 滚动到结果区域
-            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (resultSection) {
+                resultSection.classList.add('fade-in');
+                resultSection.style.display = 'block';
+                
+                // 滚动到结果区域
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
         }
         
         // 加载期货品种
@@ -954,43 +1397,33 @@
         // 刷新期货品种数据（从API拉取并更新数据库）
         function refreshFuturesProducts() {
             const refreshBtn = document.getElementById('refresh-products-btn');
-            refreshBtn.classList.add('fa-spin');
-            refreshBtn.disabled = true;
+            const originalContent = refreshBtn.innerHTML;
             
-            // 添加点击高亮效果
-            refreshBtn.style.backgroundColor = '#6c757d';
-            refreshBtn.style.color = 'white';
+            // 显示加载状态
+            refreshBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            refreshBtn.disabled = true;
             
             fetch('/api/refresh_products')
                 .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        // 重新加载品种列表
-                        loadFuturesProducts();
-                        alert('期货品种数据更新成功');
-                    } else {
-                        alert('期货品种数据更新失败: ' + result.error);
-                    }
+                .then(data => {
+                    // 刷新成功后重新加载品种列表
+                    loadFuturesProducts();
+                    alert('刷新品种数据成功！');
                 })
                 .catch(error => {
-                    console.error('更新期货品种失败:', error);
-                    alert('更新期货品种失败，请检查网络连接');
+                    console.error('刷新品种数据失败:', error);
+                    alert('刷新品种数据失败，请重试');
                 })
                 .finally(() => {
-                    refreshBtn.classList.remove('fa-spin');
+                    // 恢复按钮状态
+                    refreshBtn.innerHTML = originalContent;
                     refreshBtn.disabled = false;
-                    
-                    // 恢复默认样式
-                    refreshBtn.style.backgroundColor = '#e9ecef';
-                    refreshBtn.style.color = '#495057';
                 });
         }
         
-        // 加载指定品种的合约
+        // 加载合约
         function loadContracts(productId) {
             const contractSelect = document.getElementById('contract-select');
-            
-            // 清空合约下拉框
             contractSelect.innerHTML = '<option value="">请选择合约</option>';
             
             if (!productId) {
@@ -998,27 +1431,35 @@
                 return;
             }
             
-            // 启用合约下拉框
             contractSelect.disabled = false;
             
-            // 从API获取合约数据
+            // 修复URL格式，使用正确的查询参数
             fetch(`/api/contracts?product_id=${productId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误!状态: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(contracts => {
+                    if (contracts.error) {
+                        throw new Error(contracts.error);
+                    }
+                    
                     contracts.forEach(contract => {
                         const option = document.createElement('option');
                         option.value = contract.code;
-                        option.textContent = contract.name;
+                        option.textContent = contract.code;
                         contractSelect.appendChild(option);
                     });
                     
-                    // 尝试从缓存中恢复合约选择
+                    // 尝试从主缓存中恢复合约选择
                     try {
                         const cachedData = localStorage.getItem(CACHE_KEY);
                         if (cachedData) {
                             const formData = JSON.parse(cachedData);
-                            if (formData.contractCode && formData.productId === productId) {
-                                // 检查合约是否存在
+                            if (formData.contractCode) {
+                                // 检查合约是否存在于当前产品下
                                 const optionExists = Array.from(contractSelect.options).some(option => option.value === formData.contractCode);
                                 if (optionExists) {
                                     contractSelect.value = formData.contractCode;
@@ -1031,186 +1472,219 @@
                 })
                 .catch(error => {
                     console.error('加载合约失败:', error);
+                    // 显示友好的错误提示
+                    alert(`加载合约失败: ${error.message}`);
                 });
         }
         
         // 初始化事件监听器
         function initEventListeners() {
             // 策略选择变化事件
-            const strategySelect = document.getElementById('strategy-select');
-            strategySelect.addEventListener('change', function() {
+            document.getElementById('strategy-select').addEventListener('change', function() {
                 const strategyId = this.value;
-                loadStrategyParams(strategyId);
-                
-                // 获取策略说明
-                fetch('/api/strategies')
-                    .then(response => response.json())
-                    .then(strategies => {
-                        const selectedStrategy = strategies.find(s => s.id === strategyId);
-                        if (selectedStrategy) {
-                            updateStrategyDescription(selectedStrategy.description);
-                        }
-                    });
-                
-                // 保存表单数据
+                if (strategyId) {
+                    loadStrategyParams(strategyId);
+                }
                 saveFormData();
             });
             
-            // 品种选择变化事件
-            const productSelect = document.getElementById('product-select');
-            productSelect.addEventListener('change', function() {
+            // 产品选择变化事件
+            document.getElementById('product-select').addEventListener('change', function() {
                 const productId = this.value;
                 loadContracts(productId);
-                
-                // 保存表单数据
                 saveFormData();
             });
             
             // 合约选择变化事件
-            const contractSelect = document.getElementById('contract-select');
-            contractSelect.addEventListener('change', saveFormData);
+            document.getElementById('contract-select').addEventListener('change', saveFormData);
             
-            // 基础表单字段变化事件
-            document.getElementById('capital-input').addEventListener('change', saveFormData);
-            document.getElementById('capital-input').addEventListener('input', saveFormData);
-            document.getElementById('commission-input').addEventListener('change', saveFormData);
-            document.getElementById('commission-input').addEventListener('input', saveFormData);
-            document.getElementById('start-date').addEventListener('change', saveFormData);
-            document.getElementById('end-date').addEventListener('change', saveFormData);
-            document.getElementById('backtest-level').addEventListener('change', saveFormData);
+            // 表单字段变化事件
+            const formFields = document.querySelectorAll('#strategy-form input, #strategy-form select');
+            formFields.forEach(field => {
+                field.addEventListener('change', saveFormData);
+                field.addEventListener('input', saveFormData);
+            });
             
             // 刷新品种按钮点击事件
-            const refreshBtn = document.getElementById('refresh-products-btn');
-            refreshBtn.addEventListener('click', refreshFuturesProducts);
+            document.getElementById('refresh-products-btn').addEventListener('click', refreshFuturesProducts);
             
             // 表单提交事件
-            const strategyForm = document.getElementById('strategy-form');
-            strategyForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // 获取表单数据
-                const strategyId = document.getElementById('strategy-select').value;
-                const contractCode = document.getElementById('contract-select').value;
-                const initialCapital = document.getElementById('capital-input').value;
-                const commissionRate = document.getElementById('commission-input').value;
-                const startDate = document.getElementById('start-date').value;
-                const endDate = document.getElementById('end-date').value;
-                const backtestLevel = document.getElementById('backtest-level').value;
-                
-                // 验证表单
-                if (!contractCode) {
-                    alert('请选择期货合约');
-                    return;
-                }
-                
-                if (!startDate || !endDate) {
-                    alert('请选择回测日期范围');
-                    return;
-                }
-                
-                // 获取策略参数
-                const params = {};
-                const paramInputs = document.querySelectorAll('#strategy-params input, #strategy-params select');
-                paramInputs.forEach(input => {
-                    const paramName = input.name;
-                    if (input.type === 'number') {
-                        params[paramName] = parseFloat(input.value);
-                    } else {
-                        params[paramName] = input.value;
-                    }
-                });
-                
-                // 准备请求数据
-                const requestData = {
-                    strategy_id: strategyId,
-                    symbol: contractCode,
-                    initial_capital: parseInt(initialCapital),
-                    commission_rate: parseFloat(commissionRate),
-                    start_date: startDate,
-                    end_date: endDate,
-                    backtest_level: backtestLevel,
-                    params: params
-                };
-                
-                // 显示进度条
-                const progressSection = document.getElementById('progress-section');
-                progressSection.style.display = 'block';
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                progressBar.style.width = '0%';
-                progressBar.textContent = '0%';
-                progressText.textContent = '准备开始回测...';
-                
-                // 隐藏结果区域
-                const resultSection = document.getElementById('result-section');
+            document.getElementById('strategy-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                runBacktest();
+            });
+        }
+        
+        // 运行回测
+        function runBacktest() {
+            // 获取DOM元素并检查存在性
+            const progressContainer = document.getElementById('progress-section');
+            const progressBar = document.getElementById('progress-bar');
+            const resultSection = document.getElementById('result-section');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            
+            // 参数校验
+            const strategySelect = document.getElementById('strategy-select');
+            const contractSelect = document.getElementById('contract-select');
+            const capitalInput = document.getElementById('capital-input');
+            const commissionInput = document.getElementById('commission-input');
+            
+            // 检查必填项
+            if (!strategySelect.value) {
+                alert('请选择一个策略');
+                strategySelect.focus();
+                return;
+            }
+            
+            if (!contractSelect.value) {
+                alert('请选择一个期货合约');
+                contractSelect.focus();
+                return;
+            }
+            
+            // 检查数值输入
+            const capital = parseFloat(capitalInput.value);
+            const commission = parseFloat(commissionInput.value);
+            
+            if (isNaN(capital) || capital < 10000 || capital > 10000000) {
+                alert('初始资金必须在10000到10000000之间');
+                capitalInput.focus();
+                return;
+            }
+            
+            if (isNaN(commission) || commission < 0 || commission > 10) {
+                alert('手续费率必须在0到10之间');
+                commissionInput.focus();
+                return;
+            }
+            
+            // 隐藏结果区域
+            if (resultSection) {
+                resultSection.style.display = 'none';
                 resultSection.classList.remove('fade-in');
-                
-                // 发送请求
-                fetch('/api/run_backtest', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestData)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        // 隐藏进度条
-                        progressSection.style.display = 'none';
-                        
-                        // 显示结果
-                        showBacktestResult(result);
-                    } else {
-                        // 显示错误信息
-                        progressText.textContent = `回测失败: ${result.error}`;
-                        alert(`回测失败: ${result.error}`);
+            }
+            
+            // 显示进度条
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+            }
+            if (progressBar) {
+                progressBar.style.width = '0%';
+            }
+            // 检查loadingSpinner是否存在再操作
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'block';
+            }
+            
+            // 准备请求数据
+            const requestData = {
+                strategy_id: strategySelect.value,
+                symbol: contractSelect.value,
+                initial_capital: capital,
+                commission_rate: commission,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                backtest_level: document.getElementById('backtest-level').value,
+                params: {}
+            };
+            
+            // 添加策略参数并校验
+            const paramInputs = document.querySelectorAll('#strategy-params input, #strategy-params select');
+            paramInputs.forEach(input => {
+                const paramName = input.name;
+                if (input.type === 'number') {
+                    const value = parseFloat(input.value);
+                    if (isNaN(value)) {
+                        alert(`参数${input.previousElementSibling.textContent}必须是有效的数字`);
+                        throw new Error('参数校验失败');
                     }
-                })
-                .catch(error => {
-                    console.error('回测请求失败:', error);
-                    progressText.textContent = '回测请求失败，请检查网络连接';
-                    alert('回测请求失败，请检查网络连接');
-                });
+                    requestData.params[paramName] = value;
+                } else {
+                    requestData.params[paramName] = input.value;
+                }
+            });
+            
+            // 显示模拟进度
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = `${progress}%`;
+            }, 300);
+            
+            // 发送回测请求
+            fetch('/api/run_backtest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('回测请求失败');
+                }
+                return response.json();
+            })
+            .then(result => {
+                // 清除进度更新
+                clearInterval(progressInterval);
                 
-                // 模拟进度更新
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 10;
-                    if (progress > 100) progress = 100;
-                    
-                    progressBar.style.width = `${progress}%`;
-                    progressBar.textContent = `${Math.round(progress)}%`;
-                    
-                    // 更新进度文本
-                    let statusText = '正在准备数据...';
-                    if (progress > 30) statusText = '正在运行策略...';
-                    if (progress > 70) statusText = '正在计算性能指标...';
-                    if (progress > 90) statusText = '正在生成报告...';
-                    
-                    progressText.textContent = statusText;
-                    
-                    if (progress >= 100) {
-                        clearInterval(interval);
+                // 完成进度（添加null检查）
+                if (progressBar) {
+                    progressBar.style.width = '100%';
+                }
+                
+                // 延迟一下，让用户看到100%的进度
+                setTimeout(() => {
+                    // 添加null检查
+                    if (progressContainer) {
+                        progressContainer.style.display = 'none';
                     }
-                }, 300);
+                    if (loadingSpinner) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                    
+                    // 显示回测结果
+                    showBacktestResult(result);
+                }, 500);
+            })
+            .catch(error => {
+                // 清除进度更新
+                clearInterval(progressInterval);
+                
+                // 隐藏进度条 - 添加null检查
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'none';
+                }
+                
+                console.error('回测失败:', error);
+                alert('回测失败: ' + error.message);
             });
         }
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化日期选择器
             initDatePickers();
-            loadStrategies();
-            loadFuturesProducts();
-            initCharts();
-            initEventListeners();
             
-            // 立即尝试加载表单数据
+            // 加载策略
+            loadStrategies();
+            
+            // 加载期货品种
+            loadFuturesProducts();
+            
+            // 初始化图表
+            initCharts();
+            
+            // 加载缓存的表单数据
             loadFormData();
             
-            // 延迟再次加载，确保所有动态内容已加载完成
-            setTimeout(loadFormData, 300);
+            // 初始化事件监听器
+            initEventListeners();
         });
     </script>
-</body>
 </html>

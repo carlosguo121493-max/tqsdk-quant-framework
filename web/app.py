@@ -25,10 +25,6 @@ from db import db, FuturesProduct, FuturesContract, init_db, initialize_data, re
 # 导入TqSdk相关模块，用于获取真实的期货合约数据
 from tqsdk import TqApi, TqAuth
 
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['SimHei']
-plt.rcParams['axes.unicode_minus'] = False
-
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -37,6 +33,10 @@ from framework.quant_framework import QuantFramework, StrategyBase
 from strategies.moving_average_strategy import MovingAverageStrategy, MultipleMovingAverageStrategy
 # 导入策略配置模块
 from strategies.strategy_config import get_all_strategies, get_strategy_params
+
+# 设置中文字体 - 移到所有导入之后，确保设置有效
+plt.rcParams['font.sans-serif'] = ['SimHei', 'WenQuanYi Micro Hei', 'Heiti TC', 'sans-serif']
+plt.rcParams['axes.unicode_minus'] = False
 
 app = Flask(__name__)
 
@@ -86,6 +86,9 @@ def generate_simulation_data(days=252, initial_capital=1000000, strategy_name='�
     
     # 计算性能指标
     total_return = (equity_curve[-1] / initial_capital - 1) * 100
+    
+    # 计算年化收益率 (假设一年252个交易日)
+    annualized_return = ((1 + total_return/100) ** (252/days) - 1) * 100
     
     # 计算日收益率
     daily_returns = np.diff(equity_curve) / equity_curve[:-1]
@@ -158,10 +161,29 @@ def generate_simulation_data(days=252, initial_capital=1000000, strategy_name='�
         # 如果交易日多于模拟天数，截断
         date_range = date_range[:len(equity_curve)]
     
+    # 生成大盘收益率曲线（模拟数据）
+    market_returns = np.random.normal(0.0003 / adj_factor, 0.018 / np.sqrt(adj_factor), data_points)
+    market_capital = initial_capital
+    market_curve = [market_capital]
+    for r in market_returns:
+        market_capital *= (1 + r)
+        market_curve.append(market_capital)
+    
+    # 生成无风险收益率曲线（模拟数据，假设年化3%）
+    risk_free_rate = 0.03 / 252 / adj_factor  # 日无风险收益率
+    risk_free_capital = initial_capital
+    risk_free_curve = [risk_free_capital]
+    for _ in range(data_points):
+        risk_free_capital *= (1 + risk_free_rate)
+        risk_free_curve.append(risk_free_capital)
+    
     return {
         'dates': date_range.strftime('%Y-%m-%d').tolist(),
         'equity_curve': equity_curve,
+        'market_curve': market_curve,
+        'risk_free_curve': risk_free_curve,
         'total_return': total_return,
+        'annualized_return': annualized_return,
         'sharpe_ratio': sharpe_ratio,
         'max_drawdown': max_drawdown,
         'calmar_ratio': calmar_ratio,
@@ -343,6 +365,7 @@ def run_backtest():
         
         # 重新计算性能指标
         total_return = (simulation_data['equity_curve'][-1] / initial_capital - 1) * 100
+        annualized_return = ((1 + total_return/100) ** (252/252) - 1) * 100  # 假设252个交易日
         daily_returns = np.diff(simulation_data['equity_curve']) / simulation_data['equity_curve'][:-1]
         sharpe_ratio = np.sqrt(252) * daily_returns.mean() / (daily_returns.std() + 1e-8)
         running_max = np.maximum.accumulate(simulation_data['equity_curve'])
@@ -359,6 +382,7 @@ def run_backtest():
         
         simulation_data.update({
             'total_return': total_return,
+            'annualized_return': annualized_return,
             'sharpe_ratio': sharpe_ratio,
             'max_drawdown': max_drawdown,
             'calmar_ratio': calmar_ratio,
@@ -386,6 +410,7 @@ def run_backtest():
             'backtest_level': backtest_level,
             'performance': {
                 'total_return': round(simulation_data['total_return'], 2),
+                'annualized_return': round(simulation_data['annualized_return'], 2),
                 'sharpe_ratio': round(simulation_data['sharpe_ratio'], 2),
                 'max_drawdown': round(simulation_data['max_drawdown'], 2),
                 'calmar_ratio': round(simulation_data['calmar_ratio'], 2),
@@ -397,7 +422,9 @@ def run_backtest():
             },
             'equity_data': {
                 'dates': simulation_data['dates'],
-                'values': [round(val, 2) for val in simulation_data['equity_curve']]
+                'values': [round(val, 2) for val in simulation_data['equity_curve']],
+                'market_values': [round(val, 2) for val in simulation_data['market_curve']],
+                'risk_free_values': [round(val, 2) for val in simulation_data['risk_free_curve']]
             }
         }
         
