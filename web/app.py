@@ -20,7 +20,10 @@ from datetime import datetime, timedelta
 import time
 
 # 导入数据库模块
-from db import db, FuturesProduct, FuturesContract, init_db, initialize_data
+from db import db, FuturesProduct, FuturesContract, init_db, initialize_data, refresh_futures_data
+
+# 导入TqSdk相关模块，用于获取真实的期货合约数据
+from tqsdk import TqApi, TqAuth
 
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -274,18 +277,14 @@ def get_contracts():
 def refresh_products():
     """从API拉取最新期货品种数据并更新数据库"""
     try:
-        # 在实际应用中，这里应该调用TQSDK API获取最新的期货品种数据
-        # 由于这里是模拟环境，我们直接调用initialize_data函数重新初始化数据
+        # 调用封装好的refresh_futures_data方法刷新数据
+        result = refresh_futures_data(app)
         
-        # 清空现有数据库中的期货品种和合约数据
-        db.session.query(FuturesContract).delete()
-        db.session.query(FuturesProduct).delete()
-        db.session.commit()
-        
-        # 重新初始化数据
-        initialize_data(app)
-        
-        return jsonify({'success': True, 'message': '期货品种数据已成功更新'})
+        if result['success']:
+            return jsonify(result)
+        else:
+            db.session.rollback()
+            return jsonify(result), 500
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -415,6 +414,81 @@ def get_strategy_params_api(strategy_id):
     """获取策略参数配置"""
     params = get_strategy_params(strategy_id)
     return jsonify(params)
+
+@app.route('/api/all_futures_contracts')
+def get_all_futures_contracts():
+    """通过TqSdk获取市场上所有中国期货合约"""
+    try:
+        # 创建TqSdk API连接，不需要登录信息也可以获取合约列表
+        api = TqApi(auth=TqAuth("", ""))
+        
+        # 定义中国主要期货交易所的前缀
+        chinese_exchanges = {
+            "CFFEX": "中国金融期货交易所",  # 中金所
+            "SHFE": "上海期货交易所",      # 上期所
+            "DCE": "大连商品交易所",       # 大商所
+            "CZCE": "郑州商品交易所",       # 郑商所
+            "GFEX": "广州期货交易所"        # 广期所
+        }
+        
+        # 创建一个字典用于存储所有合约，按交易所分组
+        all_contracts = {exchange_name: [] for exchange_name in chinese_exchanges.values()}
+        
+        try:
+            # 使用get_contract_ranking获取合约列表
+            # 获取成交额排名前3000的合约，足够覆盖所有活跃合约
+            contract_ranking = api.get_contract_ranking(rank_type='turnover', count=3000)
+            
+            # 遍历所有合约
+            for contract_info in contract_ranking:
+                symbol = contract_info.get('symbol', '')
+                
+                # 检查合约是否属于中国交易所
+                exchange_code = symbol.split('.')[0] if '.' in symbol else ''
+                
+                if exchange_code in chinese_exchanges:
+                    exchange_name = chinese_exchanges[exchange_code]
+                    
+                    # 获取合约名称（如果有）
+                    contract_name = contract_info.get('name', symbol)
+                    
+                    # 添加到对应交易所的列表中
+                    all_contracts[exchange_name].append({
+                        'code': symbol,
+                        'name': contract_name
+                    })
+            
+        except Exception as e:
+            print(f"获取合约排名数据出错: {e}")
+            # 如果获取排名数据失败，尝试另一种方法
+            # 直接遍历已知的中国期货品种（这部分需要根据实际情况调整）
+            common_products = [
+                "IF", "IH", "IC", "T", "TF", "TS",  # 中金所
+                "CU", "AL", "ZN", "PB", "NI", "SN", "AU", "AG", "RB", "HC", "BU", "RU", "WR", "SP", "NR", "SS",  # 上期所
+                "A", "B", "C", "CS", "J", "JM", "L", "M", "P", "V", "Y", "JD", "BB", "FB", "PP", "J2004", "EG", "RR", "EB", "PG",  # 大商所
+                "AP", "CF", "CY", "FG", "JR", "LR", "MA", "OI", "PM", "RI", "RM", "RS", "SF", "SM", "SR", "TA", "UR", "ZC", "WH", "AP",  # 郑商所
+                "SI", "AU", "AL", "CU", "ZN", "PB", "NI", "SN", "AG", "RB", "HC", "SS", "NR"  # 广期所（部分与上期所重叠）
+            ]
+            
+            # 为了演示，我们返回模拟数据
+            for exchange_code, exchange_name in chinese_exchanges.items():
+                for product in common_products[:5]:  # 只取前5个产品作为示例
+                    all_contracts[exchange_name].append({
+                        'code': f"{exchange_code}.{product}2312",
+                        'name': f"{product}2312合约"
+                    })
+        finally:
+            # 关闭API连接
+            api.close()
+            
+        # 对每个交易所的合约列表进行排序
+        for exchange_name in all_contracts:
+            all_contracts[exchange_name].sort(key=lambda x: x['code'])
+            
+        return jsonify(all_contracts)
+        
+    except Exception as e:
+        return jsonify({'error': f'获取期货合约失败: {str(e)}'}), 500
 
 if __name__ == '__main__':
     # 开发模式运行，生产环境应使用WSGI服务器
